@@ -1,0 +1,11 @@
+LICENSE.txt
+MANIFEST.in
+README.rst
+setup.cfg
+setup.py
+rdp/__init__.py
+rdp.egg-info/PKG-INFO
+rdp.egg-info/SOURCES.txt
+rdp.egg-info/dependency_links.txt
+rdp.egg-info/requires.txt
+rdp.egg-info/top_level.txt
