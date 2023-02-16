@@ -153,7 +153,7 @@ const Results = () => {
                 title="File size"
                 original={`${context.data.file_size} ${context.data.file_type}`}
                 simplified={`${context.data.new_file_size} ${context.data.new_file_type}`}
-                difference={`${context.data.file_size - context.data.new_file_size} ${context.data.new_file_type} less`}
+                difference={`${context.data.diff_file_size} ${context.data.diff_file_type} less`}
               />
               <tr className="border-b border-slate-200">
                 <td className="text-left pl-10 py-5 text-slate-700 font-semibold">

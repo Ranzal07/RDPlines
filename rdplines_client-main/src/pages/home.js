@@ -158,7 +158,7 @@ const Home = () => {
         console.log(res.data);
       })
       .catch((err) => {
-        toast.error("Error uploading! Try again.", {
+        toast.error(err.response.data.message, {
           position: "top-right",
           autoClose: 4000,
           hideProgressBar: false,
