@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "jstat": "^1.9.6"
+  }
+}
