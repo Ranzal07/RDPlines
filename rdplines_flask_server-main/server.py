@@ -1,3 +1,4 @@
+
 from flask import Flask, jsonify, request, send_file
 from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
@@ -7,6 +8,7 @@ import os
 #from scipy.stats import wilcoxon
 from rdp import rdp     # comment this line of code if you want to try the real code of rdp'
 from scipy.spatial.distance import directed_hausdorff
+from scipy.stats import ttest_ind
 
 app = Flask(__name__)
 
@@ -138,6 +140,12 @@ def trigger():
                 list_row_1_rdp.append(None)
                 list_row_2_rdp.append(None)
             counter += 1
+        
+        # t-test
+        # remove the none values
+        cleaned_list_rdp = [x for x in list_row_2_rdp if x is not None]
+        # perform the t-test
+        t, p = ttest_ind(list_row_2, cleaned_list_rdp)
 
         # row_2 = points before rdp
         # row_2_rdp = points after rdp with null values
@@ -149,7 +157,9 @@ def trigger():
             "row_2_rdp": list_row_2_rdp,
             "file_type": file_type,
             "file_size": file_size,
-            "epsilon" : eps
+            "epsilon" : eps,
+            "t_statistic": t,
+            "p_value": p,
         })
         # get the running of single_rdp and parallel_rdp
         getRunningTime(points, eps, return_val)

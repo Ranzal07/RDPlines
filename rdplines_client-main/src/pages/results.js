@@ -127,7 +127,7 @@ const Results = () => {
         )}
 
         <div className="relative mt-[100px]">
-          <div className="absolute w-[350%] -move-infinite -zanimate-1 left-0">
+          <div className="absolute w-[350%] animate-move-infinite">
             <img
               src="/images/line-2.png"
               alt="infinity line"
@@ -168,22 +168,19 @@ const Results = () => {
                 title="Mean Value"
                 original={`${getMeanVal(context.data.row_2)}`}
                 simplified={`${getMeanVal(context.data.row_2_rdp)}`}
-                difference={`${getMeanVal(context.data.row_2) - getMeanVal(context.data.row_2_rdp)}`}
+                difference={`${(
+                  getMeanVal(context.data.row_2) -
+                  getMeanVal(context.data.row_2_rdp)
+                ).toFixed(2)}`}
               />
               <Row
                 title="Standard deviation"
                 original={`${getStandardDeviation(context.data.row_2)}`}
                 simplified={`${getStandardDeviation(context.data.row_2_rdp)}`}
-                difference={`${getStandardDeviation(context.data.row_2) - getStandardDeviation(context.data.row_2_rdp)}`}
-              />
-              <Row
-                title="Running time"
-                original={`${context.data.running_time_orig}`}
-                simplified={`${context.data.running_time_simp}`}
-                difference={`${
-                  context.data.running_time_orig -
-                  context.data.running_time_simp
-                } faster`}
+                difference={`${(
+                  getStandardDeviation(context.data.row_2) -
+                  getStandardDeviation(context.data.row_2_rdp)
+                ).toFixed(2)}`}
               />
               <Row
                 title="File size"
@@ -195,7 +192,6 @@ const Results = () => {
                 title="Epsilon Value"
                 original={`${context.data.epsilon}`}
               />
-              
               <tr className="border-b border-slate-200">
                 <td className="text-left pl-10 py-5 text-slate-700 font-semibold">
                   File name
@@ -209,17 +205,60 @@ const Results = () => {
                     Download File
                   </button>
                 </td>
-                
+                <td></td>
               </tr>
-                          
             </tbody>
-            
           </table>
-          
         </div>
-       
 
-        <div className="flex pb-6">
+        <div className="flex pb-[250px] mb-6 relative">
+          {/* table */}
+          <div className="flex-1 w-full">
+            <table className="table-fixed text-center w-full mt-[15%]">
+              <thead className="bg-slate-200 border-b-[28px] border-slate-50">
+                <tr className="">
+                  <th className="border py-4">T-statistic</th>
+                  <th className="border">P-value</th>
+                </tr>
+              </thead>
+              <tbody className="text-gray-700 font-medium text-[30px] mt-4">
+                <tr className="">
+                  <td className="py-4 border-r border-gray-300">
+                    {context.data.t_statistic.toFixed(3)}
+                  </td>
+                  <td>{context.data.p_value.toFixed(3)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* description */}
+          <div className="flex-1 ml-8 pl-12">
+            <h2 className="mt-6 text-4xl text-gray-800 font-medium">T-Test</h2>
+            <p className="text-gray-500 mt-6 font-regular text-lg">
+              A t-test is used to see if there's a significant difference
+              between the means of two datasets.
+            </p>
+            <p className="text-gray-500 mt-6 font-regular text-lg">
+              In general, if the p-value returned by the t-test function is less
+              than some chosen significance level (often 0.05), it is considered
+              to be statistically significant and the null hypothesis is
+              rejected. A t-statistic of 0 indicates that there is no
+              significant difference between the means of the two samples.
+            </p>
+          </div>
+
+          {/* flowy line */}
+          <div className="absolute w-[350%] bottom-0 animate-move-infinite">
+            <img
+              src="/images/line-2.png"
+              alt="infinity line"
+              className="h-[180px] w-[350%]"
+            />
+          </div>
+        </div>
+
+        <div className="flex pb-6 pt-6">
           {/* input confidence level */}
           <div className=" flex-1 mr-8 pr-12">
             <h2 className="mt-6 text-4xl text-gray-800 font-medium">
@@ -335,7 +374,6 @@ function Chart({ data }) {
         text: `${context.file?.name}`,
       },
     },
-    
   };
 
   const labels = data.row_1;
@@ -358,8 +396,8 @@ function Chart({ data }) {
       },
     ],
   };
-  
-  return <Line options={options} data={settings}/>
+
+  return <Line options={options} data={settings} />;
 }
 
 function Row({ title, original, simplified, difference }) {
