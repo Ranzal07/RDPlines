@@ -168,13 +168,13 @@ const Results = () => {
                 title="Mean Value"
                 original={`${getMeanVal(context.data.row_2)}`}
                 simplified={`${getMeanVal(context.data.row_2_rdp)}`}
-                difference="1% MOE"
+                difference={`${getMeanVal(context.data.row_2) - getMeanVal(context.data.row_2_rdp)}`}
               />
               <Row
                 title="Standard deviation"
                 original={`${getStandardDeviation(context.data.row_2)}`}
                 simplified={`${getStandardDeviation(context.data.row_2_rdp)}`}
-                difference="1% MOE"
+                difference={`${getStandardDeviation(context.data.row_2) - getStandardDeviation(context.data.row_2_rdp)}`}
               />
               <Row
                 title="Running time"
@@ -191,6 +191,11 @@ const Results = () => {
                 simplified={`${context.data.new_file_size} ${context.data.new_file_type}`}
                 difference={`${context.data.diff_file_size} ${context.data.diff_file_type} less`}
               />
+              <Row
+                title="Epsilon Value"
+                original={`${context.data.epsilon}`}
+              />
+              
               <tr className="border-b border-slate-200">
                 <td className="text-left pl-10 py-5 text-slate-700 font-semibold">
                   File name
@@ -204,11 +209,15 @@ const Results = () => {
                     Download File
                   </button>
                 </td>
-                <td></td>
+                
               </tr>
+                          
             </tbody>
+            
           </table>
+          
         </div>
+       
 
         <div className="flex pb-6">
           {/* input confidence level */}
@@ -326,6 +335,7 @@ function Chart({ data }) {
         text: `${context.file?.name}`,
       },
     },
+    
   };
 
   const labels = data.row_1;
@@ -348,8 +358,8 @@ function Chart({ data }) {
       },
     ],
   };
-
-  return <Line options={options} data={settings} />;
+  
+  return <Line options={options} data={settings}/>
 }
 
 function Row({ title, original, simplified, difference }) {

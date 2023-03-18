@@ -1,4 +1,3 @@
-
 from flask import Flask, jsonify, request, send_file
 from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
@@ -120,7 +119,6 @@ def trigger():
 
         # get automatic epsilon value
         eps = np.std(points)*0.05
-        print(f'\nEpsilon: {eps}')
 
         tempRDP = parallel_rdp(points,eps)  # get the simplified points from the parallel_rdp
 
@@ -151,6 +149,7 @@ def trigger():
             "row_2_rdp": list_row_2_rdp,
             "file_type": file_type,
             "file_size": file_size,
+            "epsilon" : eps
         })
         # get the running of single_rdp and parallel_rdp
         getRunningTime(points, eps, return_val)
