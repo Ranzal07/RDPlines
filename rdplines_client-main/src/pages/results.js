@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState} from "react";
 import FileSaver from "file-saver";
 import jStat from "jstat";
 import {
@@ -362,42 +362,60 @@ ChartJS.register(
 
 function Chart({ data }) {
   const context = useContext(LayoutContext);
+  const dataRDPLength = data.row_2_rdp.length;  // I added this get the length of the rdp points
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,   // I added this to make the chart stretch to adjust with the width
     plugins: {
       legend: {
-        position: "top",
+        position: 'top',
       },
       title: {
         display: true,
         text: `${context.file?.name}`,
       },
     },
+
+    /* I added the scales to configure x and y axis of the chart*/
+    scales: {
+      x:{
+        ticks:{
+          autoSkip: false, // This will ensure that (x)all axis labels are displayed all of them and do not skipped
+        }
+      },
+      y:{
+        max: Math.ceil(Math.max(...data.row_2) / 20) * 20, // This will give the appropriate upper limit of the y-axis scale
+      }
+    },
+    
   };
 
-  const labels = data.row_1;
-
   const settings = {
-    labels,
+    labels: data.row_1,
     datasets: [
-      {
-        label: `Simplified ${data.columns[1]}`,
-        data: data.row_2_rdp,
-        borderColor: "rgb(79, 70, 229)",
-        backgroundColor: "rgba(79, 70, 229, 0.5)",
-        spanGaps: true,
-      },
       {
         label: `Original ${data.columns[1]}`,
         data: data.row_2,
         borderColor: "rgb(6, 182, 212)",
         backgroundColor: "rgba(6, 182, 212, 0.5)",
       },
+      {
+        label: `Simplified ${data.columns[1]}`,
+        data: data.row_2_rdp,
+        borderColor: "rgb(79, 70, 229)",
+        backgroundColor: "rgba(79, 70, 229, 0.5)",
+        spanGaps: true,  
+      },
     ],
   };
 
-  return <Line options={options} data={settings} />;
+  /* ADDING two div for scrollbar and width & height */
+  return <div style={{overflowX: 'auto'}}>
+            <div style={{width: `${dataRDPLength * 50}px`, maxWidth: `${dataRDPLength * 50}px`, height: '700px'}}>
+              <Line options={options} data={settings}/>
+            </div>
+          </div>
 }
 
 function Row({ title, original, simplified, difference }) {

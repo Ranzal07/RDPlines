@@ -1,5 +1,7 @@
 
 from flask import Flask, jsonify, request, send_file
+from io import BytesIO
+import shutil
 from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 import numpy as np
@@ -66,17 +68,27 @@ def getRunningTime(points, eps, return_val):
 
 # this function is for creating new CSV file for the simplified original CSV file
 def createNewCSV(file, file_size, paralValue, df, return_val):
-    global new_filename
+    global simplified_file
     filename = file.filename
     df_simplified = pd.DataFrame(paralValue, columns=[df.columns[0],df.columns[1]])
-    new_filename = filename.split('.')[0]+'(simplified).csv'    
-    df_simplified.to_csv(new_filename, index=False)
 
-    new_file_size = os.path.getsize(new_filename)
+    # save the created file to the folder name: simplified-files
+    directory_path = 'simplified-files'
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+    simplified_file = os.path.join(directory_path, filename.split('.')[0]+'(simplified).csv')
+    df_simplified.to_csv(simplified_file, index=False)
+
+    # get the size of the new file and its file size type
+    new_file_size = os.path.getsize(simplified_file)
     new_file_type= convert_bytes(new_file_size)
 
+    # get the size of the difference file and its file size type
     diff_file_size = file_size - new_file_size
     diff_file_type = convert_bytes(diff_file_size)
+
+    # remove the 'simplified-files\' string from the new_filename 'simplified-files\<file_name>(simplified).csv'
+    new_filename = simplified_file.replace('simplified-files\\', '')
 
     return_val.update({
         "new_file_name": new_filename,
@@ -103,7 +115,7 @@ def trigger():
         file = request.files['file']
 
         file_size = os.fstat(file.fileno()).st_size
-        file_type= convert_bytes(file_size)
+        file_type = convert_bytes(file_size)
 
         # read file using pandas
         df = pd.read_csv(file.stream, delimiter=',')
@@ -161,6 +173,7 @@ def trigger():
             "t_statistic": t,
             "p_value": p,
         })
+        
         # get the running of single_rdp and parallel_rdp
         getRunningTime(points, eps, return_val)
 
@@ -184,7 +197,7 @@ def trigger():
 @app.route('/download')
 def download():
     # send the newly created csv file to the react client
-    return send_file(new_filename, as_attachment=True)
+    return send_file(simplified_file, as_attachment=True)
 
 #members api route
 @app.route("/members")
