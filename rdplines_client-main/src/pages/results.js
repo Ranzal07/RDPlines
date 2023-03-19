@@ -415,7 +415,7 @@ function Chart({ data }) {
             <div style={{width: `${dataRDPLength * 50}px`, maxWidth: `${dataRDPLength * 50}px`, height: '700px'}}>
               <Line options={options} data={settings}/>
             </div>
-          </div>
+        </div>
 }
 
 function Row({ title, original, simplified, difference }) {
