@@ -2,15 +2,15 @@
 from flask import Flask, jsonify, request, send_file
 from io import BytesIO
 import shutil
-from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 import numpy as np
 import time
 import os
-#from scipy.stats import wilcoxon
+from scipy.stats import wilcoxon
 from rdp import rdp     # comment this line of code if you want to try the real code of rdp'
-from scipy.spatial.distance import directed_hausdorff
 from scipy.stats import ttest_ind
+from joblib import Parallel, delayed
+
 
 app = Flask(__name__)
 
@@ -46,25 +46,43 @@ def single_rdp(points, eps):
 
 # this function contains the cpu parallelized of RDP
 def parallel_rdp(points, eps):
-    executor = ThreadPoolExecutor(max_workers=20)
-    parallel_rdp = executor.submit(rdp, points, eps)
-    executor.shutdown(wait=False)
-    return parallel_rdp.result()
+    cpu_cores = 4
+    results = Parallel(cpu_cores)(delayed(rdp)(points[i::cpu_cores], eps) for i in range(cpu_cores))
+    return np.concatenate(results)
 
 def getRunningTime(points, eps, return_val):
-    # get running time for rdp with no cpu parallelism    
-    start_time = time.perf_counter() 
-    single_rdp(points, eps)
-    end_time = time.perf_counter()
-    running_time_orig = end_time - start_time
-    return_val.update({"running_time_orig": running_time_orig})
+    for i in range(10):
+        # get running time for rdp with no cpu parallelism    
+        start_time = time.time() 
+        single_rdp(points, eps)
+        end_time = time.time()
+        running_time_orig = end_time - start_time
+        return_val.update({"running_time_orig": running_time_orig})
 
-    # get running time for rdp with cpu parallelism   
-    start_time = time.perf_counter() 
-    parallel_rdp(points, eps)
-    end_time = time.perf_counter()
-    running_time_simp = end_time - start_time
-    return_val.update({"running_time_simp": running_time_simp})
+        # get running time for rdp with cpu parallelism   
+        start_time = time.time() 
+        parallel_rdp(points, eps)
+        end_time = time.time()
+        running_time_simp = end_time - start_time
+        return_val.update({"running_time_simp": running_time_simp})
+
+        # compare the two running times using wilcoxon
+        p_value = wilcoxon([running_time_orig, running_time_simp]).pvalue
+        index = i + 1
+
+        # check if the running of the parallelized RDP is faster than the classic RDP
+        if running_time_simp < running_time_orig:
+            print(f"{index}. The parallelized RDP algorithm is faster")
+        else:
+            print(f"{index}. The classic RDP algorithm is faster")
+
+        # check if p_value is lower than the default significant level 0.05
+        # if TRUE, it is statistically significant, if FALSE, it is not statistically significant
+        if p_value < 0.05:
+            print(f"{index}. It is statistically significant. P_Value: {p_value}")
+        else:
+            print(f"{index}. It is NOT statistically significant. P_Value: {p_value}")
+        print("\n")
 
 # this function is for creating new CSV file for the simplified original CSV file
 def createNewCSV(file, file_size, paralValue, df, return_val):
@@ -114,6 +132,7 @@ def trigger():
         # get file from api call
         file = request.files['file']
 
+        # try catch here
         file_size = os.fstat(file.fileno()).st_size
         file_type = convert_bytes(file_size)
 
@@ -132,7 +151,12 @@ def trigger():
         points = np.column_stack([range(len(first_row)), second_row])
 
         # get automatic epsilon value
-        eps = np.std(points)*0.05
+        k = 0.1  # You can adjust this constant factor to tune the level of simplification
+        distances = np.abs(np.subtract.outer(points[:, 1], points[:, 1])).flatten()
+        stddev = np.std(distances)
+        eps = k * stddev
+  
+        """eps = np.std(points)*0.05"""
 
         tempRDP = parallel_rdp(points,eps)  # get the simplified points from the parallel_rdp
 

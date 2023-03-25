@@ -29,8 +29,8 @@ ChartJS.register(
 );
 
 const Home = () => {
-  const borderColor = "rgb(99, 102, 241)";
-  const backgroundColor = "rgb(165, 180, 252)";
+  const borderColor = "rgb(6, 182, 212)";
+  const backgroundColor = "rgba(6, 182, 212, 0.5)";
 
   const context = useContext(LayoutContext);
 

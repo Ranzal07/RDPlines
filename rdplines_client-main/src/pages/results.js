@@ -183,6 +183,12 @@ const Results = () => {
                 ).toFixed(2)}`}
               />
               <Row
+                title="Running time"
+                original={`${context.data.running_time_orig}`}
+                simplified={`${context.data.running_time_simp}`}
+                difference={`${context.data.running_time_orig - context.data.running_time_simp} faster`}
+              />
+              <Row
                 title="File size"
                 original={`${context.data.file_size} ${context.data.file_type}`}
                 simplified={`${context.data.new_file_size} ${context.data.new_file_type}`}
@@ -411,7 +417,7 @@ function Chart({ data }) {
   };
 
   /* ADDING two div for scrollbar and width & height */
-  return <div style={{overflowX: 'auto'}}>
+  return <div style={{overflowX: 'scroll'}}>
             <div style={{width: `${dataRDPLength * 50}px`, maxWidth: `${dataRDPLength * 50}px`, height: '700px'}}>
               <Line options={options} data={settings}/>
             </div>
