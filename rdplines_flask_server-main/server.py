@@ -1,7 +1,5 @@
 
 from flask import Flask, jsonify, request, send_file
-from io import BytesIO
-import shutil
 import pandas as pd
 import numpy as np
 import time
@@ -39,10 +37,10 @@ def perpendicular_distance(point, start, end):
     return nom/denom
 """
 
-# this function contains just a normal RDP
-def single_rdp(points, eps):
-    single_rdp = rdp(points, epsilon=eps)    
-    return single_rdp
+# this function contains just a classic RDP
+def classic_rdp(points, eps):
+    classic_rdp = rdp(points, epsilon=eps)    
+    return classic_rdp
 
 # this function contains the cpu parallelized of RDP
 def parallel_rdp(points, eps):
@@ -52,14 +50,14 @@ def parallel_rdp(points, eps):
 
 def getRunningTime(points, eps, return_val):
     for i in range(10):
-        # get running time for rdp with no cpu parallelism    
+        # get running time for classic rdp    
         start_time = time.time() 
-        single_rdp(points, eps)
+        classic_rdp(points, eps)
         end_time = time.time()
         running_time_orig = end_time - start_time
         return_val.update({"running_time_orig": running_time_orig})
 
-        # get running time for rdp with cpu parallelism   
+        # get running time for cpu parallelized rdp 
         start_time = time.time() 
         parallel_rdp(points, eps)
         end_time = time.time()
@@ -198,7 +196,7 @@ def trigger():
             "p_value": p,
         })
         
-        # get the running of single_rdp and parallel_rdp
+        # get the running of classic_rdp and parallel_rdp
         getRunningTime(points, eps, return_val)
 
         # write the simplified dataframe to a new csv file

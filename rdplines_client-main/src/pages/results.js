@@ -418,7 +418,7 @@ function Chart({ data }) {
 
   /* ADDING two div for scrollbar and width & height */
   return <div style={{overflowX: 'scroll'}}>
-            <div style={{width: `${dataRDPLength * 50}px`, maxWidth: `${dataRDPLength * 50}px`, height: '700px'}}>
+            <div style={{width: `${(dataRDPLength * 50)}px`, maxWidth: `${(dataRDPLength * 50)}px`, height: '700px'}}>
               <Line options={options} data={settings}/>
             </div>
         </div>
