@@ -2,16 +2,15 @@
 import os
 import time
 import numpy as np
-from rdp import rdp     # comment this line of code if you want to try the real code of rdp'
+from rdp import rdp     # comment this line of code if you want to try the rdp code from scratch
 import pandas as pd
 from scipy.stats import wilcoxon
 from scipy.stats import ttest_ind
 from skimage.measure import approximate_polygon
 from flask import Flask, jsonify, request, send_file
 
-
 app = Flask(__name__)
-# real code for rdp without approx_poly
+# rdp code from scratch
 """
 def rdp(points, epsilon):
     dmax = 0
