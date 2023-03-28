@@ -6,6 +6,7 @@ from rdp import rdp     # comment this line of code if you want to try the rdp c
 import pandas as pd
 from scipy.stats import wilcoxon
 from scipy.stats import ttest_ind
+from multiprocessing import Process, Queue
 from skimage.measure import approximate_polygon
 from flask import Flask, jsonify, request, send_file
 
@@ -40,41 +41,55 @@ def classic_rdp(points, eps):
     classic_rdp = rdp(points, epsilon=eps)    
     return classic_rdp
 
-# this function contains the RDP algorithm with approximate_polygon
-def approx_poly(points, eps):
-    approx_rdp = approximate_polygon(points, eps)
-    return approx_rdp
+# this function contains the RDP algorithm with CPU Parallelism
+def queue_rdp(points, eps, queue):
+    queue_rdp = rdp(points, epsilon=eps)
+    return queue.put(queue_rdp)    
+
+def parallel_rdp(points, eps):
+    queue = Queue()
+    p = Process(target=queue_rdp, args=(points, eps, queue))
+    p.start()
+    p.join()
+    results = queue.get()
+    return results
 
 def getRunningTime(points, eps, return_val):
-    # get running time for classic rdp    
-    start_time = time.time() 
-    classic_rdp(points, eps)
-    end_time = time.time()
-    classic_runtime = end_time - start_time
-    return_val.update({"classic_runtime": classic_runtime})
+    for _ in range(10):
+        # get running time for classic rdp    
+        start_time = time.time() 
+        classic_rdp(points, eps)
+        end_time = time.time()
+        classic_runtime = end_time - start_time
+        return_val.update({"classic_runtime": classic_runtime})
 
-    # get running time for rdp with approximate_polygon
-    start_time = time.time() 
-    approx_poly(points, eps)
-    end_time = time.time()
-    approxPoly_runtime = end_time - start_time
-    return_val.update({"approxPoly_runtime": approxPoly_runtime})
+        # get running time for rdp with CPU Parallelism
+        start_time = time.time() 
+        parallel_rdp(points, eps)
+        end_time = time.time()
+        parallel_runtime = end_time - start_time
+        return_val.update({"parallel_runtime": parallel_runtime})
 
-    # compare the two running times using wilcoxon
-    p_value = wilcoxon([classic_runtime, approxPoly_runtime]).pvalue
+        # compare the two running times using wilcoxon
+        p_value = wilcoxon([classic_runtime, parallel_runtime]).pvalue
 
-    # check if the running of the RDP algorithm with approximate_polygon is faster than the classic RDP
-    if approxPoly_runtime < classic_runtime:
-        print("The RDP algorithm with Approximate Polygon is faster")
-    else:
-        print("The classic RDP algorithm is faster")
+        # check if the running of the RDP algorithm with CPU Parallelism is faster than the classic RDP
+        if parallel_runtime < classic_runtime:
+            print("The RDP algorithm with CPU Parallelism is faster")
+            print("Parallel RDP RunTime: ", parallel_runtime)
+            print("Classic RDP RunTime:  ", classic_runtime)
 
-    # check if p_value is lower than the default significant level 0.05
-    # if TRUE, it is statistically significant, if FALSE, it is not statistically significant
-    if p_value < 0.05:
-        print(f"It is statistically significant. P_Value: {p_value}")
-    else:
-        print(f"It is NOT statistically significant. P_Value: {p_value}")
+        else:
+            print("The Classic RDP algorithm is faster")
+            print("Parallel RDP RunTime: ", parallel_runtime)
+            print("Classic RDP RunTime:  ", classic_runtime)
+
+        # check if p_value is lower than the default significant level 0.05
+        # if TRUE, it is statistically significant, if FALSE, it is not statistically significant
+        if p_value < 0.05:
+            print(f"It is statistically significant. P_Value: {p_value}\n")
+        else:
+            print(f"It is NOT statistically significant. P_Value: {p_value}\n")
 
 # this function is for creating new CSV file for the simplified original CSV file
 def createNewCSV(file, file_size, paralValue, df, return_val):
@@ -150,7 +165,7 @@ def trigger():
 
         """eps = np.std(points)*0.05"""
 
-        tempRDP = approx_poly(points,eps)  # get the simplified points from the classic_rdp or approx_poly
+        tempRDP = parallel_rdp(points,eps)  # get the simplified points from the classic_rdp or parallel_rdp
 
         first_row_rdp = [list_row_1[int(item[0])] for item in tempRDP]
         second_row_rdp = [list_row_2[int(item[0])] for item in tempRDP]
@@ -190,7 +205,7 @@ def trigger():
             "p_value": p,
         })
         
-        # get the running of classic_rdp and approx_poly
+        # get the running of classic_rdp and parallel_rdp
         getRunningTime(points, eps, return_val)
 
         # write the simplified dataframe to a new csv file

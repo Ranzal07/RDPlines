@@ -185,8 +185,8 @@ const Results = () => {
               <Row
                 title="Running time"
                 original={`${context.data.classic_runtime}`}
-                simplified={`${context.data.approxPoly_runtime}`}
-                difference={`${context.data.classic_runtime - context.data.approxPoly_runtime} faster`}
+                simplified={`${context.data.parallel_runtime}`}
+                difference={`${context.data.classic_runtime - context.data.parallel_runtime} faster`}
               />
               <Row
                 title="File size"
