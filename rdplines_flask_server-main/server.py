@@ -154,7 +154,7 @@ def trigger():
         # take the columns and rows
         cols = df.columns.values.tolist()
         first_row = df.iloc[:, 0]
-        second_row = df.iloc[:, 1]
+        second_row = df.iloc[:, 1].astype(float)
 
         # list rows
         list_row_1 = first_row.values.tolist()
