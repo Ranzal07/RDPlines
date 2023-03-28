@@ -63,18 +63,23 @@ def getRunningTime(points, eps, return_val):
     # compare the two running times using wilcoxon
     p_value = wilcoxon([classic_runtime, approxPoly_runtime]).pvalue
 
-    # check if the running of the RDP algorithm with approximate_polygon is faster than the classic RDP
+    # check if the running of the RDP algorithm with Approximate Polygon is faster than the classic RDP
     if approxPoly_runtime < classic_runtime:
         print("The RDP algorithm with Approximate Polygon is faster")
+        print("Parallel RDP RunTime: ", approxPoly_runtime)
+        print("Classic RDP RunTime:  ", classic_runtime)
+
     else:
-        print("The classic RDP algorithm is faster")
+        print("The Classic RDP algorithm is faster")
+        print("Parallel RDP RunTime: ", approxPoly_runtime)
+        print("Classic RDP RunTime:  ", classic_runtime)
 
     # check if p_value is lower than the default significant level 0.05
     # if TRUE, it is statistically significant, if FALSE, it is not statistically significant
     if p_value < 0.05:
-        print(f"It is statistically significant. P_Value: {p_value}")
+        print(f"It is statistically significant. P_Value: {p_value}\n")
     else:
-        print(f"It is NOT statistically significant. P_Value: {p_value}")
+        print(f"It is NOT statistically significant. P_Value: {p_value}\n")
 
 # this function is for creating new CSV file for the simplified original CSV file
 def createNewCSV(file, file_size, paralValue, df, return_val):
