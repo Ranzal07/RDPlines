@@ -54,6 +54,11 @@ def parallel_rdp(points, eps):
     results = queue.get()
     return results
 
+# this function contains the RDP algorithm with approximate_polygon
+def approx_poly(points, eps):
+    approx_rdp = approximate_polygon(points, eps)
+    return approx_rdp
+
 def getRunningTime(points, eps, return_val):
     for _ in range(10):
         # get running time for classic rdp    
