@@ -7,7 +7,6 @@ import pandas as pd
 from scipy.stats import wilcoxon
 from scipy.stats import ttest_ind
 from multiprocessing import Process, Queue
-from skimage.measure import approximate_polygon
 from flask import Flask, jsonify, request, send_file
 
 app = Flask(__name__)
