@@ -4,12 +4,23 @@ import time
 import numpy as np
 from rdp import rdp     # comment this line of code if you want to try the rdp code from scratch
 import pandas as pd
+from typing import List
 from scipy.stats import wilcoxon
 from scipy.stats import ttest_ind
+<<<<<<< HEAD
 from multiprocessing import Process, Queue
+=======
+from concurrent.futures import ThreadPoolExecutor
+>>>>>>> 18e8baba128a981d04658f49fef891647d564a10
 from flask import Flask, jsonify, request, send_file
 
 app = Flask(__name__)
+
+# Set the maximum allowed request size to 100 GB
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024 * 1024
+
+executor = ThreadPoolExecutor(2) 
+
 # rdp code from scratch
 """
 def rdp(points, epsilon):
@@ -34,26 +45,64 @@ def perpendicular_distance(point, start, end):
     denom = ((y2 - y1)**2 + (x2 - x1)**2)**0.5
     return nom/denom
 """
+def find_optimal_chunk_size(data, epsilon):
+    chunk_size = len(data)
+    max_chunks = 20
+    best_chunk_size = chunk_size
+    best_time = float('inf')
+    
+    for i in range(max_chunks):
+        # Divide the data into chunks
+        data_chunks = [data[j:j+chunk_size] for j in range(0, len(data), chunk_size)]
+        
+        # Run the parallel_rdp_algorithm function with the current chunk size
+        start_time = time.time()
+        parallel_rdp_algorithm(data, epsilon, chunk_size=chunk_size)
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        
+        # Update the best chunk size if the current time is better
+        if elapsed_time < best_time:
+            best_chunk_size = chunk_size
+            best_time = elapsed_time
+        
+        # Decrease the chunk size by a certain percentage
+        chunk_size = int(chunk_size * 0.9)
+    
+    return best_chunk_size
 
 # this function contains just a classic RDP algorithm
 def classic_rdp(points, eps):
     classic_rdp = rdp(points, epsilon=eps)    
     return classic_rdp
 
-# this function contains the RDP algorithm with CPU Parallelism
-def queue_rdp(points, eps, queue):
-    queue_rdp = rdp(points, epsilon=eps)
-    return queue.put(queue_rdp)    
-
+# this is slow
 def parallel_rdp(points, eps):
-    queue = Queue()
-    p = Process(target=queue_rdp, args=(points, eps, queue))
-    p.start()
-    p.join()
-    results = queue.get()
-    return results
+    future = executor.submit(classic_rdp, points, eps)
+    result = future.result()
+    return result
+
+def parallel_rdp_algorithm(data: List[List[float]], epsilon: float, chunk_size: int = None) -> List[List[float]]:
+    # Create a thread pool with two threads
+    executor = ThreadPoolExecutor(2)
+
+    # Divide the data into chunks of size chunk_size (if specified)
+    if chunk_size:
+        data_chunks = [data[i:i+chunk_size] for i in range(0, len(data), chunk_size)]
+    else:
+        data_chunks = [data]
+
+    # Submit each chunk to the thread pool
+    futures = [executor.submit(parallel_rdp, chunk, epsilon) for chunk in data_chunks]
+
+    # Wait for all threads to finish and collect the results
+    results = [future.result() for future in futures]
+
+    # Concatenate the results into a single list
+    return [point for sublist in results for point in sublist]
 
 def getRunningTime(points, eps, return_val):
+<<<<<<< HEAD
     # get running time for classic rdp    
     start_time = time.time() 
     classic_rdp(points, eps)
@@ -67,10 +116,32 @@ def getRunningTime(points, eps, return_val):
     end_time = time.time()
     parallel_runtime = end_time - start_time
     return_val.update({"parallel_runtime": parallel_runtime})
+=======
+    parallel = 0
+    classic = 0
+    for _ in range(20):
+
+        # get running time for classic rdp    
+        start_time = time.time() 
+        classic_points = rdp(points, epsilon=eps)
+        end_time = time.time()
+        classic_runtime = end_time - start_time
+        return_val.update({"classic_runtime": classic_runtime})
+        return_val.update({"classic_points": classic_points.tolist()})
+
+        # get running time for rdp with CPU Parallelism
+        chunk = find_optimal_chunk_size(points, eps)
+        start_time = time.time() 
+        parallel_rdp_algorithm(points, eps, chunk)
+        end_time = time.time()
+        parallel_runtime = end_time - start_time
+        return_val.update({"parallel_runtime": parallel_runtime})
+>>>>>>> 18e8baba128a981d04658f49fef891647d564a10
 
     # compare the two running times using wilcoxon
     p_value = wilcoxon([classic_runtime, parallel_runtime]).pvalue
 
+<<<<<<< HEAD
     # check if the running of the RDP algorithm with CPU Parallelism is faster than the classic RDP
     if parallel_runtime < classic_runtime:
         print("The RDP algorithm with CPU Parallelism is faster")
@@ -88,6 +159,29 @@ def getRunningTime(points, eps, return_val):
         print(f"It is statistically significant. P_Value: {p_value}\n")
     else:
         print(f"It is NOT statistically significant. P_Value: {p_value}\n")
+=======
+        # increments which algorithm is faster
+        if parallel_runtime < classic_runtime:
+            parallel+=1
+        else:
+            classic+=1
+
+    # check if the running of the RDP algorithm with CPU Parallelism is faster than the classic RDP
+    if(parallel>classic):
+        print("The RDP algorithm with parallelized RDP is faster")
+        # check if p_value is lower than the default significant level 0.05
+        # if TRUE, it is statistically significant, if FALSE, it is not statistically significant
+        if p_value < 0.05:
+            print(f"It is statistically significant. P_Value: {p_value}\n")
+        else:
+            print(f"It is NOT statistically significant. P_Value: {p_value}\n")
+    else:
+        print("The classic RDP algorithm is faster")
+        if p_value < 0.05:
+            print(f"It is statistically significant. P_Value: {p_value}\n")
+        else:
+            print(f"It is NOT statistically significant. P_Value: {p_value}\n")
+>>>>>>> 18e8baba128a981d04658f49fef891647d564a10
 
 # this function is for creating new CSV file for the simplified original CSV file
 def createNewCSV(file, file_size, paralValue, df, return_val):
@@ -147,7 +241,7 @@ def trigger():
         # take the columns and rows
         cols = df.columns.values.tolist()
         first_row = df.iloc[:, 0]
-        second_row = df.iloc[:, 1]
+        second_row = df.iloc[:, 1].astype(float)
 
         # list rows
         list_row_1 = first_row.values.tolist()
@@ -163,8 +257,12 @@ def trigger():
 
         """eps = np.std(points)*0.05"""
 
-        tempRDP = parallel_rdp(points,eps)  # get the simplified points from the classic_rdp or parallel_rdp
+        # edit here
+        # change chunk size
+        chunk = find_optimal_chunk_size(points, eps)
 
+        # parallel results
+        tempRDP = parallel_rdp_algorithm(points, eps, chunk)
         first_row_rdp = [list_row_1[int(item[0])] for item in tempRDP]
         second_row_rdp = [list_row_2[int(item[0])] for item in tempRDP]
         paralValue = np.column_stack([first_row_rdp,second_row_rdp])    # stacks the new first and second row for the simplified data
@@ -181,6 +279,25 @@ def trigger():
                 list_row_1_rdp.append(None)
                 list_row_2_rdp.append(None)
             counter += 1
+
+        # classic results
+        tempClassic = rdp(points, epsilon=eps)
+        list_of_lists = [[float(val) for val in row] for row in tempClassic]
+        first_row_rdp_classic = [list_row_1[int(item[0])] for item in list_of_lists]
+        second_row_rdp_classic = [list_row_2[int(item[0])] for item in list_of_lists]
+
+        list_row_1_rdp_classic = []
+        list_row_2_rdp_classic = []
+
+        counter2 = 0
+        for item in first_row:
+            if item in first_row_rdp_classic:
+                list_row_1_rdp_classic.append(item)
+                list_row_2_rdp_classic.append(second_row[counter2])
+            else:
+                list_row_1_rdp_classic.append(None)
+                list_row_2_rdp_classic.append(None)
+            counter2 += 1
         
         # t-test
         # remove the none values
@@ -196,6 +313,8 @@ def trigger():
             "row_2": list_row_2,
             "row_1_rdp": list_row_1_rdp,
             "row_2_rdp": list_row_2_rdp,
+            "row_1_rdp_classic": list_row_1_rdp_classic,
+            "row_2_rdp_classic": list_row_2_rdp_classic,
             "file_type": file_type,
             "file_size": file_size,
             "epsilon" : eps,
@@ -203,7 +322,8 @@ def trigger():
             "p_value": p,
         })
         
-        # get the running of classic_rdp and parallel_rdp
+        # print(list_row_2)
+        # get the running of classic_rdp and approx_poly
         getRunningTime(points, eps, return_val)
 
         # write the simplified dataframe to a new csv file
