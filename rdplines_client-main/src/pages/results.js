@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useRef } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import FileSaver from "file-saver";
 import jStat from "jstat";
 import {
@@ -156,88 +156,6 @@ const Results = () => {
             </div>
           </div>
 
-<<<<<<< HEAD
-        <div className="flex justify-center mt-16 mb-[200px]">
-          <table className="table-fixed text-center w-9/12 ">
-            <thead className="bg-slate-200 border">
-              <tr className="py-6">
-                <th className="border"></th>
-                <th className="border py-3">Original</th>
-                <th className="border">Simplified</th>
-                <th className="border">Difference</th>
-              </tr>
-            </thead>
-            <tbody className="text-slate-500 ">
-              <Row
-                title="No. of data points"
-                original={`${context.data.row_2.length}`}
-                simplified={`${
-                  context.data.row_2_rdp.filter((item) => item).length
-                }`}
-                difference={`${dataPointsDiff()}`}
-              />
-              <Row
-                title="Mean Value"
-                original={`${getMeanVal(context.data.row_2)}`}
-                simplified={`${getMeanVal(context.data.row_2_rdp)}`}
-                difference={`${(
-                  getMeanVal(context.data.row_2) -
-                  getMeanVal(context.data.row_2_rdp)
-                ).toFixed(2)}`}
-              />
-              <Row
-                title="Standard deviation"
-                original={`${getStandardDeviation(context.data.row_2)}`}
-                simplified={`${getStandardDeviation(context.data.row_2_rdp)}`}
-                difference={`${(
-                  getStandardDeviation(context.data.row_2) -
-                  getStandardDeviation(context.data.row_2_rdp)
-                ).toFixed(2)}`}
-              />
-              <Row
-                title="Running time"
-                original={`${context.data.classic_runtime}`}
-                simplified={`${context.data.parallel_runtime}`}
-                difference={`${context.data.classic_runtime - context.data.parallel_runtime} faster`}
-              />
-              <Row
-                title="File size"
-                original={`${context.data.file_size} ${context.data.file_type}`}
-                simplified={`${context.data.new_file_size} ${context.data.new_file_type}`}
-                difference={`${context.data.diff_file_size} ${context.data.diff_file_type} less`}
-              />
-              <Row
-                title="Epsilon Value"
-                original={`${context.data.epsilon}`}
-              />
-              <tr className="border-b border-slate-200">
-                <td className="text-left pl-10 py-5 text-slate-700 font-semibold">
-                  File name
-                </td>
-                <td>{`${context.data.new_file_name}`}</td>
-                <td>
-                  <button
-                    onClick={handleDownload}
-                    className="bg-indigo-700 py-2 px-5 rounded-lg text-white font-semibold"
-                  >
-                    Download File
-                  </button>
-                </td>
-                <td></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div className="flex pb-[250px] mb-6 relative">
-          {/* table */}
-          <div className="flex-1 w-full">
-            <table className="table-fixed text-center w-full mt-[15%]">
-              <thead className="bg-slate-200 border-b-[28px] border-slate-50">
-                <tr className="">
-                  <th className="border py-4">T-statistic</th>
-                  <th className="border">P-value</th>
-=======
           <div className="flex justify-center mt-16 mb-[200px]">
             <table className="table-fixed text-center w-9/12 ">
               <thead className="bg-slate-200 border">
@@ -246,7 +164,6 @@ const Results = () => {
                   <th className="border py-3">Original Line</th>
                   <th className="border py-3">Classic RDP</th>
                   <th className="border">Parallel RDP</th>
->>>>>>> copy/test
                 </tr>
               </thead>
               <tbody className="text-slate-500 ">
