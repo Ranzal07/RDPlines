@@ -97,50 +97,37 @@ def parallel_rdp_algorithm(data: List[List[float]], epsilon: float, chunk_size: 
     return [point for sublist in results for point in sublist]
 
 def getRunningTime(points, eps, return_val):
-    parallel = 0
-    classic = 0
-    for _ in range(20):
+    # get running time for classic rdp    
+    start_time = time.time() 
+    classic_points = rdp(points, epsilon=eps)
+    end_time = time.time()
+    classic_runtime = end_time - start_time
+    return_val.update({"classic_runtime": classic_runtime})
+    return_val.update({"classic_points": classic_points.tolist()})
 
-        # get running time for classic rdp    
-        start_time = time.time() 
-        classic_points = rdp(points, epsilon=eps)
-        end_time = time.time()
-        classic_runtime = end_time - start_time
-        return_val.update({"classic_runtime": classic_runtime})
-        return_val.update({"classic_points": classic_points.tolist()})
-
-        # get running time for rdp with CPU Parallelism
-        chunk = find_optimal_chunk_size(points, eps)
-        start_time = time.time() 
-        parallel_rdp_algorithm(points, eps, chunk)
-        end_time = time.time()
-        parallel_runtime = end_time - start_time
-        return_val.update({"parallel_runtime": parallel_runtime})
+    # get running time for rdp with CPU Parallelism
+    chunk = find_optimal_chunk_size(points, eps)
+    start_time = time.time() 
+    parallel_rdp_algorithm(points, eps, chunk)
+    end_time = time.time()
+    parallel_runtime = end_time - start_time
+    return_val.update({"parallel_runtime": parallel_runtime})
 
     # compare the two running times using wilcoxon
     p_value = wilcoxon([classic_runtime, parallel_runtime]).pvalue
 
-        # increments which algorithm is faster
-        if parallel_runtime < classic_runtime:
-            parallel+=1
-        else:
-            classic+=1
-
     # check if the running of the RDP algorithm with CPU Parallelism is faster than the classic RDP
-    if(parallel>classic):
+    if(parallel_runtime<classic_runtime):
         print("The RDP algorithm with parallelized RDP is faster")
-        # check if p_value is lower than the default significant level 0.05
-        # if TRUE, it is statistically significant, if FALSE, it is not statistically significant
-        if p_value < 0.05:
-            print(f"It is statistically significant. P_Value: {p_value}\n")
-        else:
-            print(f"It is NOT statistically significant. P_Value: {p_value}\n")
     else:
         print("The classic RDP algorithm is faster")
-        if p_value < 0.05:
-            print(f"It is statistically significant. P_Value: {p_value}\n")
-        else:
-            print(f"It is NOT statistically significant. P_Value: {p_value}\n")
+
+    # check if p_value is lower than the default significant level 0.05
+    # if TRUE, it is statistically significant, if FALSE, it is not statistically significant
+    if p_value < 0.05:
+        print(f"It is statistically significant. P_Value: {p_value}\n")
+    else:
+        print(f"It is NOT statistically significant. P_Value: {p_value}\n")
 
 # this function is for creating new CSV file for the simplified original CSV file
 def createNewCSV(file, file_size, paralValue, df, return_val):
