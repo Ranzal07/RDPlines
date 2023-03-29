@@ -7,11 +7,7 @@ import pandas as pd
 from typing import List
 from scipy.stats import wilcoxon
 from scipy.stats import ttest_ind
-from multiprocessing import Process, Queue
-from skimage.measure import approximate_polygon
-
 from concurrent.futures import ThreadPoolExecutor
-
 from flask import Flask, jsonify, request, send_file
 
 app = Flask(__name__)
@@ -101,54 +97,47 @@ def parallel_rdp_algorithm(data: List[List[float]], epsilon: float, chunk_size: 
     # Concatenate the results into a single list
     return [point for sublist in results for point in sublist]
 
-# this function contains the RDP algorithm with approximate_polygon
-def approx_poly(points, eps):
-    approx_rdp = approximate_polygon(points, eps)
-    return approx_rdp
-
 def getRunningTime(points, eps, return_val):
-    # test it
-    # result = parallel_rdp_algorithm(points, eps, chunk_size=30)
-    # print(result)
+    parallel = 0
+    classic = 0
+    for _ in range(20):
 
-    # get running time for classic rdp    
-    start_time = time.time() 
-    classic_points = rdp(points, epsilon=eps)
-    end_time = time.time()
-    classic_runtime = end_time - start_time
-    return_val.update({"classic_runtime": classic_runtime})
-    return_val.update({"classic_points": classic_points.tolist()})
+        # get running time for classic rdp    
+        start_time = time.time() 
+        classic_points = rdp(points, epsilon=eps)
+        end_time = time.time()
+        classic_runtime = end_time - start_time
+        return_val.update({"classic_runtime": classic_runtime})
+        return_val.update({"classic_points": classic_points.tolist()})
 
-    chunk = find_optimal_chunk_size(points, eps)
-    print(chunk)
+        # get running time for rdp with CPU Parallelism
+        chunk = find_optimal_chunk_size(points, eps)
+        start_time = time.time() 
+        parallel_rdp_algorithm(points, eps, chunk)
+        end_time = time.time()
+        parallel_runtime = end_time - start_time
+        return_val.update({"parallel_runtime": parallel_runtime})
 
-    # get running time for rdp with approximate_polygon
-    start_time = time.time() 
-    # edit here
-    # parallel_rdp(points, eps)
-    parallel_rdp_algorithm(points, eps, chunk)
-    # end of edit
-    end_time = time.time()
-    parallel_runtime = end_time - start_time
-    return_val.update({"parallel_runtime": parallel_runtime})
-    # approx_poly(points, eps)
-    # end_time = time.time()
-    # approxPoly_runtime = end_time - start_time
-    # return_val.update({"approxPoly_runtime": approxPoly_runtime})
+        # compare the two running times using wilcoxon
+        p_value = wilcoxon([classic_runtime, parallel_runtime]).pvalue
 
-    # compare the two running times using wilcoxon
-    p_value = wilcoxon([classic_runtime, parallel_runtime]).pvalue
+        # increments which algorithm is faster
+        if parallel_runtime < classic_runtime:
+            parallel+=1
+        else:
+            classic+=1
 
-    # check if the running of the RDP algorithm with approximate_polygon is faster than the classic RDP
-    if parallel_runtime < classic_runtime:
+    # check if the running of the RDP algorithm with CPU Parallelism is faster than the classic RDP
+    if(parallel>classic):
         print("The RDP algorithm with parallelized RDP is faster")
-    else:
-        print("The classic RDP algorithm is faster")
-        print("Parallel RDP RunTime: ", parallel_runtime)
-        print("Classic RDP RunTime:  ", classic_runtime)
-
         # check if p_value is lower than the default significant level 0.05
         # if TRUE, it is statistically significant, if FALSE, it is not statistically significant
+        if p_value < 0.05:
+            print(f"It is statistically significant. P_Value: {p_value}\n")
+        else:
+            print(f"It is NOT statistically significant. P_Value: {p_value}\n")
+    else:
+        print("The classic RDP algorithm is faster")
         if p_value < 0.05:
             print(f"It is statistically significant. P_Value: {p_value}\n")
         else:
@@ -231,12 +220,9 @@ def trigger():
         # edit here
         # change chunk size
         chunk = find_optimal_chunk_size(points, eps)
-        print(chunk)
-
 
         # parallel results
         tempRDP = parallel_rdp_algorithm(points, eps, chunk)
-        print(tempRDP)
         first_row_rdp = [list_row_1[int(item[0])] for item in tempRDP]
         second_row_rdp = [list_row_2[int(item[0])] for item in tempRDP]
         paralValue = np.column_stack([first_row_rdp,second_row_rdp])    # stacks the new first and second row for the simplified data
@@ -263,8 +249,6 @@ def trigger():
         list_row_1_rdp_classic = []
         list_row_2_rdp_classic = []
 
-        print(first_row)
-
         counter2 = 0
         for item in first_row:
             if item in first_row_rdp_classic:
@@ -274,7 +258,6 @@ def trigger():
                 list_row_1_rdp_classic.append(None)
                 list_row_2_rdp_classic.append(None)
             counter2 += 1
-
         
         # t-test
         # remove the none values

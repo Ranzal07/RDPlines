@@ -28,6 +28,7 @@ const Results = () => {
     console.log(context.file);
   });
 
+  // eslint-disable-next-line no-unused-vars
   const dataPointsDiff = () => {
     const total = context.data.row_2.length;
     const simplifiedPoints = context.data.row_2_rdp.filter(
