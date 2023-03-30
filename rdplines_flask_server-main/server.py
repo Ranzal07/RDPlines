@@ -40,28 +40,6 @@ def perpendicular_distance(point, start, end):
     denom = ((y2 - y1)**2 + (x2 - x1)**2)**0.5
     return nom/denom
 """
-def calculate_epsilon(points, time_interval):
-    x1, x2 = points[0][0], points[-1][0]
-    num_points = len(points)
-    sum_ui = 0
-    
-    for i in range(1, num_points-1):
-        xi, yi = points[i][0], points[i][1]
-        a, b, c = line_equation(points[0], points[-1])
-        ui = abs(a*xi - yi + c) / ((a**2 + 1)**0.5)
-        sum_ui += ui
-    
-    epsilon = (sum_ui * time_interval) / (x2 - x1)
-    return epsilon
-
-def line_equation(point1, point2):
-    x1, y1 = point1
-    x2, y2 = point2
-    a = y1 - y2
-    b = x2 - x1
-    c = x1*y2 - x2*y1
-    return a, b, c
-
 def find_optimal_chunk_size(data, epsilon):
     chunk_size = len(data)
     max_chunks = 20
@@ -202,7 +180,10 @@ def trigger():
         points = np.column_stack([range(len(first_row)), second_row])
 
         # get automatic epsilon value
-        eps = calculate_epsilon(points, 0.05 )
+        k = 0.1  # You can adjust this constant factor to tune the level of simplification
+        distances = np.abs(np.subtract.outer(points[:, 1], points[:, 1])).flatten()
+        stddev = np.std(distances)
+        eps = k * stddev
 
         """eps = np.std(points)*0.05"""
 
