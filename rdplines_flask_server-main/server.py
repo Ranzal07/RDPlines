@@ -40,6 +40,28 @@ def perpendicular_distance(point, start, end):
     denom = ((y2 - y1)**2 + (x2 - x1)**2)**0.5
     return nom/denom
 """
+def calculate_epsilon(points, time_interval):
+    x1, x2 = points[0][0], points[-1][0]
+    num_points = len(points)
+    sum_ui = 0
+    
+    for i in range(1, num_points-1):
+        xi, yi = points[i][0], points[i][1]
+        a, b, c = line_equation(points[0], points[-1])
+        ui = abs(a*xi - yi + c) / ((a**2 + 1)**0.5)
+        sum_ui += ui
+    
+    epsilon = (sum_ui * time_interval) / (x2 - x1)
+    return epsilon
+
+def line_equation(point1, point2):
+    x1, y1 = point1
+    x2, y2 = point2
+    a = y1 - y2
+    b = x2 - x1
+    c = x1*y2 - x2*y1
+    return a, b, c
+
 def find_optimal_chunk_size(data, epsilon):
     chunk_size = len(data)
     max_chunks = 20
@@ -96,23 +118,7 @@ def parallel_rdp_algorithm(data: List[List[float]], epsilon: float, chunk_size: 
     # Concatenate the results into a single list
     return [point for sublist in results for point in sublist]
 
-def getRunningTime(points, eps, return_val):
-    # get running time for classic rdp    
-    start_time = time.time() 
-    classic_points = rdp(points, epsilon=eps)
-    end_time = time.time()
-    classic_runtime = end_time - start_time
-    return_val.update({"classic_runtime": classic_runtime})
-    return_val.update({"classic_points": classic_points.tolist()})
-
-    # get running time for rdp with CPU Parallelism
-    chunk = find_optimal_chunk_size(points, eps)
-    start_time = time.time() 
-    parallel_rdp_algorithm(points, eps, chunk)
-    end_time = time.time()
-    parallel_runtime = end_time - start_time
-    return_val.update({"parallel_runtime": parallel_runtime})
-
+def checkFastRuntime(classic_runtime, parallel_runtime):
     # compare the two running times using wilcoxon
     p_value = wilcoxon([classic_runtime, parallel_runtime]).pvalue
 
@@ -196,10 +202,7 @@ def trigger():
         points = np.column_stack([range(len(first_row)), second_row])
 
         # get automatic epsilon value
-        k = 0.1  # You can adjust this constant factor to tune the level of simplification
-        distances = np.abs(np.subtract.outer(points[:, 1], points[:, 1])).flatten()
-        stddev = np.std(distances)
-        eps = k * stddev
+        eps = calculate_epsilon(points, 0.05 )
 
         """eps = np.std(points)*0.05"""
 
@@ -208,7 +211,12 @@ def trigger():
         chunk = find_optimal_chunk_size(points, eps)
 
         # parallel results
+        # get running time for rdp with CPU Parallelism
+        start_time = time.time() 
         tempRDP = parallel_rdp_algorithm(points, eps, chunk)
+        end_time = time.time()
+        parallel_runtime = end_time - start_time
+
         first_row_rdp = [list_row_1[int(item[0])] for item in tempRDP]
         second_row_rdp = [list_row_2[int(item[0])] for item in tempRDP]
         paralValue = np.column_stack([first_row_rdp,second_row_rdp])    # stacks the new first and second row for the simplified data
@@ -227,7 +235,12 @@ def trigger():
             counter += 1
 
         # classic results
+        # get running time for classic rdp    
+        start_time = time.time() 
         tempClassic = rdp(points, epsilon=eps)
+        end_time = time.time()
+        classic_runtime = end_time - start_time
+
         list_of_lists = [[float(val) for val in row] for row in tempClassic]
         first_row_rdp_classic = [list_row_1[int(item[0])] for item in list_of_lists]
         second_row_rdp_classic = [list_row_2[int(item[0])] for item in list_of_lists]
@@ -266,11 +279,14 @@ def trigger():
             "epsilon" : eps,
             "t_statistic": t,
             "p_value": p,
+            "classic_points": tempClassic.tolist(),
+            "classic_runtime": classic_runtime,
+            "parallel_runtime": parallel_runtime,
         })
         
         # print(list_row_2)
         # get the running of classic_rdp and approx_poly
-        getRunningTime(points, eps, return_val)
+        checkFastRuntime(classic_runtime, parallel_runtime)
 
         # write the simplified dataframe to a new csv file
         createNewCSV(file, file_size, paralValue, df, return_val)
