@@ -464,7 +464,8 @@ const htmlLegendPlugin = {
 };
 
 function Chart({ data }) {
-  
+  const dataLen = data.row_1.length
+
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -497,6 +498,7 @@ function Chart({ data }) {
         data: data.row_2,
         borderColor: "rgb(6, 182, 212)",
         backgroundColor: "rgba(6, 182, 212, 0.5)",
+        
       },
       {
         label: `Classic Line`,
@@ -517,24 +519,22 @@ function Chart({ data }) {
 
   /* ADDING two div for scrollbar and width & height */
   return (
-    <>
-      <div style={{ overflowX: "scroll", overflowY: "hidden" }}>
-        <div
-          style={{
-            width: `${60000}px`,
-            maxWidth: `auto`,
-            height: "700px",
-          }}
-          className="chart-container"
-        >
-          <Line
-            options={chartOptions}
-            data={settings}
-            plugins={[htmlLegendPlugin]}
-          />
-        </div>
+    <div style={{ overflowX: "scroll", overflowY: "hidden" }}>
+      <div
+        style={{
+          width: `${dataLen * 20}px`,
+          maxWidth: `${dataLen * 20}px`,
+          height: "700px",
+        }}
+        className="chart-container"
+      >
+      <Line
+        options={chartOptions}
+        data={settings}
+        plugins={[htmlLegendPlugin]}
+      />
       </div>
-    </>
+    </div>
   );
 }
 
