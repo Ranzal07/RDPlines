@@ -296,7 +296,7 @@ const Results = () => {
                   <div className="w-full">
                     <label
                       className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                      for="grid-last-name"
+                      htmlFor="grid-last-name"
                     >
                       Confidence Level (%)
                     </label>
@@ -464,10 +464,7 @@ const htmlLegendPlugin = {
 };
 
 function Chart({ data }) {
-  const dataRDPLength = data.row_2_rdp.length;
-
-  // I added this get the length of the rdp points
-
+  
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -524,8 +521,8 @@ function Chart({ data }) {
       <div style={{ overflowX: "scroll", overflowY: "hidden" }}>
         <div
           style={{
-            width: `${dataRDPLength * 50}px`,
-            maxWidth: `${dataRDPLength * 50}px`,
+            width: `${60000}px`,
+            maxWidth: `auto`,
             height: "700px",
           }}
           className="chart-container"

@@ -168,11 +168,17 @@ def trigger():
 
         # read file using pandas
         df = pd.DataFrame()
-        chunksize = 500
+        chunksize = 1
         for chunk in pd.read_csv(file.stream, delimiter=',', chunksize=chunksize):
             df = pd.concat([df, chunk])
 
         # take the columns and rows
+        memory_usage = df.memory_usage(deep=True).sum()
+
+        # convert to MB
+        memory_usage_mb = memory_usage / 1024 / 1024
+
+        print(f"Memory usage: {memory_usage_mb:.2f} MB")
         cols = df.columns.values.tolist()
         first_row = df.iloc[:, 0]
         second_row = df.iloc[:, 1].astype(float)
