@@ -9,6 +9,7 @@ from scipy.stats import ttest_ind
 from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, jsonify, request, send_file
 
+
 app = Flask(__name__)
 
 # Set the maximum allowed request size to 100 GB
@@ -166,7 +167,10 @@ def trigger():
         file_type = convert_bytes(file_size)
 
         # read file using pandas
-        df = pd.read_csv(file.stream, delimiter=',')
+        df = pd.DataFrame()
+        chunksize = 500
+        for chunk in pd.read_csv(file.stream, delimiter=',', chunksize=chunksize):
+            df = pd.concat([df, chunk])
 
         # take the columns and rows
         cols = df.columns.values.tolist()
