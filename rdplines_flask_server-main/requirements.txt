@@ -1,0 +1,6 @@
+rdp
+scipy
+numpy
+flask
+pandas
+gunicorn
