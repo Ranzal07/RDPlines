@@ -4,7 +4,13 @@ const App = () => {
   const [data,setData] = useState([{}]);
 
   useEffect(() => {
-    fetch("/members").then(
+    fetch("/members", 
+    {
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).then(
       res => res.json()
     ).then(
       data => {
