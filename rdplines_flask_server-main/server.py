@@ -1,5 +1,6 @@
 import os
 import time
+import math
 import numpy as np
 from rdp import rdp     # comment this line of code if you want to try the rdp code from scratch
 import pandas as pd
@@ -152,6 +153,41 @@ def convert_bytes(num):
             return "%s" % (x)
         num /= 1024.0
 
+def calculate_epsilon(points):
+    """
+    Calculates the dynamic epsilon value for the Ramer Douglas Peucker algorithm
+    given the input parameters.
+
+    Args:
+        points (list): List of (x, y) tuples representing the data points
+
+    Returns:
+        float: The dynamic epsilon value
+    """
+    x_values = [point[0] for point in points]
+    y_values = [point[1] for point in points]
+
+    # Calculate the x-coordinates of the first and last data points
+    x1 = min(x_values)
+    x2 = max(x_values)
+
+    # Calculate the slope and intercept of the line segment joining the first and last points
+    slope = (y_values[-1] - y_values[0]) / (x_values[-1] - x_values[0])
+    intercept = y_values[0] - slope * x_values[0]
+
+    # Calculate the distance of each point from the line segment
+    distances = []
+    for i in range(1, len(points)-1):
+        distance = abs(slope * points[i][0] - points[i][1] + intercept) / math.sqrt(slope**2 + 1)
+        distances.append(distance)
+
+    # Calculate the dynamic epsilon value
+    sum_distances = sum(distances)
+    time_interval = (x2 - x1) / (len(points) - 1)
+    epsilon = (sum_distances * time_interval) / (x2 - x1)
+
+    return epsilon
+
 #simplify
 @app.route('/api/simplify', methods = ['POST'])
 def trigger():
@@ -182,12 +218,7 @@ def trigger():
         points = np.column_stack([range(len(first_row)), second_row])
 
         # get automatic epsilon value
-        k = 0.1  # You can adjust this constant factor to tune the level of simplification
-        distances = np.abs(np.subtract.outer(points[:, 1], points[:, 1])).flatten()
-        stddev = np.std(distances)
-        eps = k * stddev
-
-        """eps = np.std(points)*0.05"""
+        eps = calculate_epsilon(points)
 
         # edit here
         # change chunk size
