@@ -153,6 +153,7 @@ def convert_bytes(num):
             return "%s" % (x)
         num /= 1024.0
 
+# this function is for getting dynamic epsilon value
 def dynamic_epsilon(points):
     num_points = len(points)
     x1, y1 = points[0]  # get the first point of points
