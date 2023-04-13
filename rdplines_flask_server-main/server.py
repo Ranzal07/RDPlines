@@ -153,7 +153,7 @@ def convert_bytes(num):
             return "%s" % (x)
         num /= 1024.0
 
-def calculate_epsilon(points):
+def dynamic_epsilon(points):
     """
     Calculates the dynamic epsilon value for the Ramer Douglas Peucker algorithm
     given the input parameters.
@@ -217,8 +217,8 @@ def trigger():
 
         points = np.column_stack([range(len(first_row)), second_row])
 
-        # get automatic epsilon value
-        eps = calculate_epsilon(points)
+        # get dynamic epsilon value
+        eps = dynamic_epsilon(points)
 
         # edit here
         # change chunk size
