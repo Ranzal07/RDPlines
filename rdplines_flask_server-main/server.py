@@ -154,38 +154,20 @@ def convert_bytes(num):
         num /= 1024.0
 
 def dynamic_epsilon(points):
-    """
-    Calculates the dynamic epsilon value for the Ramer Douglas Peucker algorithm
-    given the input parameters.
+    num_points = len(points)
+    x1, y1 = points[0]  # get the first point of points
+    x2, y2 = points[-1] # get the last point of points
 
-    Args:
-        points (list): List of (x, y) tuples representing the data points
+    # Calculating the perpendicular distance of each point to the line segment
+    U = []    # Store all the perpendicular distance for each points
+    for i in range(num_points):
+        xi, yi = points[i]
+        ui = abs((y2 - y1) * xi - (x2 - x1) * yi + x2 * y1 - y2 * x1) / ((y2 - y1) ** 2 + (x2 - x1) ** 2) ** 0.5
+        U.append(ui)
 
-    Returns:
-        float: The dynamic epsilon value
-    """
-    x_values = [point[0] for point in points]
-    y_values = [point[1] for point in points]
-
-    # Calculate the x-coordinates of the first and last data points
-    x1 = min(x_values)
-    x2 = max(x_values)
-
-    # Calculate the slope and intercept of the line segment joining the first and last points
-    slope = (y_values[-1] - y_values[0]) / (x_values[-1] - x_values[0])
-    intercept = y_values[0] - slope * x_values[0]
-
-    # Calculate the distance of each point from the line segment
-    distances = []
-    for i in range(1, len(points)-1):
-        distance = abs(slope * points[i][0] - points[i][1] + intercept) / math.sqrt(slope**2 + 1)
-        distances.append(distance)
-
-    # Calculate the dynamic epsilon value
-    sum_distances = sum(distances)
-    time_interval = (x2 - x1) / (len(points) - 1)
-    epsilon = (sum_distances * time_interval) / (x2 - x1)
-
+    total_ui = sum(U)   # Sums all the perpendicular distance for each points
+    time_interval = (x2 - x1) / num_points    # get the time_interval of points
+    epsilon = (total_ui * time_interval) / (x2 - x1)   # calculating the dynamic epsilon value
     return epsilon
 
 #simplify
