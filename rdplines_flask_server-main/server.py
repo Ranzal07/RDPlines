@@ -41,55 +41,58 @@ def perpendicular_distance(point, start, end):
     denom = ((y2 - y1)**2 + (x2 - x1)**2)**0.5
     return nom/denom
 """
-def find_optimal_chunk_size(data, epsilon):
-    chunk_size = len(data)
-    max_chunks = 20
-    best_chunk_size = chunk_size
-    best_time = float('inf')
-    
-    for i in range(max_chunks):
-        # Divide the data into chunks
-        data_chunks = [data[j:j+chunk_size] for j in range(0, len(data), chunk_size)]
-        
-        # Run the parallel_rdp_algorithm function with the current chunk size
-        start_time = time.time()
-        parallel_rdp_algorithm(data, epsilon, chunk_size=chunk_size)
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        
-        # Update the best chunk size if the current time is better
-        if elapsed_time < best_time:
-            best_chunk_size = chunk_size
-            best_time = elapsed_time
-        
-        # Decrease the chunk size by a certain percentage
-        chunk_size = int(chunk_size * 0.9)
-    
-    return best_chunk_size
+def find_optimal_chunk_size(data):
+    """
+    Returns the number of chunks that the points will be divided to be processed in a parallel way
+    """
+    len_data = len(data)
+    if len_data <= 100:
+        return 1
+    elif len_data <= 1000:
+        return 4
+    elif len_data <= 5000:
+        return 8
+    elif len_data <= 30000:
+        return 16
+    else:
+        return 20
 
 # this function contains just a classic RDP algorithm
 def classic_rdp(points, eps):
-    classic_rdp = rdp(points, epsilon=eps)    
-    return classic_rdp
+    """
+    Returns the classic rdp result
+    """
+    res = rdp(points, epsilon=eps)
+    return res
 
-# this is slow
+
 def parallel_rdp(points, eps):
-    future = executor.submit(classic_rdp, points, eps)
+    """
+    Returns the rdp result for every chunk
+    """
+    future = executor.submit(rdp, points, epsilon=eps)
     result = future.result()
     return result
 
+
 def parallel_rdp_algorithm(data: List[List[float]], epsilon: float, chunk_size: int = None) -> List[List[float]]:
+    """
+    This is the function where the process of running all the chunks of the original line will happen in a parallel way through the use of multiprocessing's threadpoolexecutor
+    """
+
     # Create a thread pool with two threads
     executor = ThreadPoolExecutor(2)
 
     # Divide the data into chunks of size chunk_size (if specified)
     if chunk_size:
-        data_chunks = [data[i:i+chunk_size] for i in range(0, len(data), chunk_size)]
+        data_chunks = [data[i:i+chunk_size]
+                       for i in range(0, len(data), chunk_size)]
     else:
         data_chunks = [data]
 
     # Submit each chunk to the thread pool
-    futures = [executor.submit(parallel_rdp, chunk, epsilon) for chunk in data_chunks]
+    futures = [executor.submit(parallel_rdp, chunk, epsilon)
+               for chunk in data_chunks]
 
     # Wait for all threads to finish and collect the results
     results = [future.result() for future in futures]
@@ -154,21 +157,15 @@ def convert_bytes(num):
         num /= 1024.0
 
 # this function is for getting dynamic epsilon value
-def dynamic_epsilon(points):
-    num_points = len(points)
-    x1, y1 = points[0]  # get the first point of points
-    x2, y2 = points[-1] # get the last point of points
-
-    # Calculating the perpendicular distance of each point to the line segment
-    U = []    # Store all the perpendicular distance for each points
-    for i in range(num_points):
-        xi, yi = points[i]
-        ui = abs((y2 - y1) * xi - (x2 - x1) * yi + x2 * y1 - y2 * x1) / ((y2 - y1) ** 2 + (x2 - x1) ** 2) ** 0.5
-        U.append(ui)
-
-    total_ui = sum(U)   # Sums all the perpendicular distance for each points
-    time_interval = (x2 - x1) / num_points    # get the time_interval of points
-    epsilon = (total_ui * time_interval) / (x2 - x1)   # calculating the dynamic epsilon value
+def dynamic_epsilon(data):
+    """
+    Find an epsilon value for Ramer-Douglas-Peucker line simplification
+    based on the median absolute deviation (MAD) of the data.
+    """
+    time_interval = 1  # determines the intensity of the change (1 = 100% maximum value for the best epsilon, 0.5 = 50%, 0.1 = 10%)
+    mad = np.median(np.abs(data - np.median(data)))  # MAD
+    # multiplying the mad to the intensity of change to get the epsilon
+    epsilon = mad * time_interval
     return epsilon
 
 #simplify
@@ -205,7 +202,7 @@ def trigger():
 
         # edit here
         # change chunk size
-        chunk = find_optimal_chunk_size(points, eps)
+        chunk = find_optimal_chunk_size(points)
 
         # parallel results
         # get running time for rdp with CPU Parallelism

@@ -131,7 +131,7 @@ const Results = () => {
               <div id="legend-container" className="flex justify-center mb-4" />
             </div>
 
-            <div className="pb-12 rounded-3xl flex justify-center">
+            <div className="pb-12 rounded-3xl flex justify-center" style={{ width: '90%', margin: 'auto'}}>
               <Chart data={context.data} />
             </div>
           </>
@@ -158,12 +158,11 @@ const Results = () => {
           </div>
 
           <div className="flex justify-center mt-16 mb-[200px]">
-            <table className="table-fixed text-center w-9/12 ">
+            <table className="table-fixed text-center">
               <thead className="bg-slate-200 border">
                 <tr className="py-6">
                   <th className="border"></th>
                   <th className="border py-3">Original Line</th>
-                  <th className="border py-3">Classic RDP</th>
                   <th className="border">Parallel RDP</th>
                 </tr>
               </thead>
@@ -171,39 +170,23 @@ const Results = () => {
                 <Row
                   title="No. of data points"
                   original={`${context.data.row_2.length}`}
-                  classic={`${context.data.classic_points.length}`}
                   parallel={`${
                     context.data.row_2_rdp.filter((item) => item).length
                   }`}
                 />
                 <Row
-                  title="Running time"
-                  original={`-`}
-                  classic={`${context.data.classic_runtime.toFixed(5)} seconds`}
-                  parallel={`${context.data.parallel_runtime.toFixed(
-                    5
-                  )} seconds`}
-                />
-                <Row
                   title="Mean Value"
                   original={`${getMeanVal(context.data.row_2)}`}
-                  classic={`${getMeanVal(
-                    context.data.classic_points.map((point) => point[1])
-                  )}`}
                   parallel={`${getMeanVal(context.data.row_2_rdp)}`}
                 />
                 <Row
                   title="Standard deviation"
                   original={`${getStandardDeviation(context.data.row_2)}`}
-                  classic={`${getStandardDeviation(
-                    context.data.classic_points.map((point) => point[1])
-                  )}`}
                   parallel={`${getStandardDeviation(context.data.row_2_rdp)}`}
                 />
                 <Row
                   title="File size"
                   original={`${context.data.file_size} ${context.data.file_type}`}
-                  classic={`-`}
                   parallel={`${context.data.new_file_size} ${context.data.new_file_type}`}
                 />
                 <Row
@@ -464,11 +447,8 @@ const htmlLegendPlugin = {
 };
 
 function Chart({ data }) {
-  const dataLen = data.row_1.length
-
   const chartOptions = {
     responsive: true,
-    maintainAspectRatio: false,
     plugins: {
       htmlLegend: {
         containerID: "legend-container",
@@ -479,73 +459,71 @@ function Chart({ data }) {
     },
     scales: {
       x: {
-        // display: false,
         ticks: {
-          autoSkip: false,
+          font: {
+            size: 15,
+          },
+          maxTicksLimit: 14,
+          maxRotation: 0, // Disable label rotation
+          minRotation: 0, 
         },
       },
       y: {
-        max: Math.ceil(Math.max(...data.row_2) / 20) * 20,
+        ticks: {
+          font: {
+            size: 15,
+          },
+        },
       },
     },
   };
 
+  const dataRange = data.row_2_rdp.length
+
   const settings = {
-    labels: data.row_1,
+    labels: Array.from({ length: dataRange }, (_, i) => i.toString()),
     datasets: [
-      {
-        label: `Original Line`,
-        data: data.row_2,
-        borderColor: "rgb(6, 182, 212)",
-        backgroundColor: "rgba(6, 182, 212, 0.5)",
-        
-      },
-      {
-        label: `Classic Line`,
-        data: data.row_2_rdp_classic,
-        borderColor: "rgb(217, 70, 239)",
-        backgroundColor: "rgba(217, 70, 239, 0.5)",
-        spanGaps: true,
-      },
       {
         label: `Parallel Line`,
         data: data.row_2_rdp,
         borderColor: "rgb(79, 70, 229)",
         backgroundColor: "rgba(79, 70, 229, 0.5)",
         spanGaps: true,
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+
+      },
+      {
+        label: `Original Line`,
+        data: data.row_2,
+        borderColor: "rgb(6, 182, 212)",
+        backgroundColor: "rgba(6, 182, 212, 0.5)",
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+
       },
     ],
   };
 
   /* ADDING two div for scrollbar and width & height */
   return (
-    <div style={{ overflowX: "scroll", overflowY: "hidden" }}>
-      <div
-        style={{
-          width: `${dataLen * 20}px`,
-          maxWidth: `${dataLen * 20}px`,
-          height: "700px",
-        }}
-        className="chart-container"
-      >
       <Line
         options={chartOptions}
         data={settings}
         plugins={[htmlLegendPlugin]}
       />
-      </div>
-    </div>
   );
 }
 
-function Row({ title, original, classic, parallel }) {
+function Row({ title, original, parallel }) {
   return (
     <tr className="border-b border-slate-200">
       <td className="text-left text-slate-700 pl-10 py-5 font-semibold">
         {title}
       </td>
       <td>{original}</td>
-      <td>{classic}</td>
       <td>{parallel}</td>
     </tr>
   );

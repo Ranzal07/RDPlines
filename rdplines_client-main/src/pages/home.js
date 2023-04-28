@@ -48,6 +48,8 @@ const Home = () => {
             data: context.data.row_2,
             borderColor,
             backgroundColor,
+            borderWidth: 1,
+            pointRadius: 0,
           },
         ],
       });
