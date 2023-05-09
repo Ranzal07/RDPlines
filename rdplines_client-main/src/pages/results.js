@@ -131,7 +131,7 @@ const Results = () => {
               <div id="legend-container" className="flex justify-center mb-4" />
             </div>
 
-            <div className="pb-12 rounded-3xl flex justify-center" style={{ width: '90%', margin: 'auto'}}>
+            <div className="pb-12 rounded-3xl flex justify-center" style={{ width: '75%', margin: 'auto'}}>
               <Chart data={context.data} />
             </div>
           </>
@@ -186,8 +186,8 @@ const Results = () => {
                 />
                 <Row
                   title="File size"
-                  original={`${context.data.file_size} ${context.data.file_type}`}
-                  parallel={`${context.data.new_file_size} ${context.data.new_file_type}`}
+                  original={`${context.data.file_type}`}
+                  parallel={`${context.data.new_file_type}`}
                 />
                 <Row
                   title="Epsilon Value"
@@ -388,7 +388,6 @@ const htmlLegendPlugin = {
   id: "htmlLegend",
   afterUpdate(chart, args, options) {
     const ul = getOrCreateLegendList(chart, options.containerID);
-
     // Remove old legend items
     while (ul.firstChild) {
       ul.firstChild.remove();
@@ -409,7 +408,7 @@ const htmlLegendPlugin = {
         const { type } = chart.config;
         if (type === "pie" || type === "doughnut") {
           // Pie and doughnut charts only have a single dataset and visibility is per item
-          chart.toggleDataVisibility(item.index);
+          chart.toggleDataVisibility(item.index);  
         } else {
           chart.setDatasetVisibility(
             item.datasetIndex,
@@ -457,31 +456,36 @@ function Chart({ data }) {
         display: false,
       },
     },
+    layout: {
+      padding: {
+        left: 10,
+        right: 10,
+        top: 0,
+        bottom: 0,
+      },
+    },
     scales: {
       x: {
         ticks: {
           font: {
-            size: 15,
+            size: 25,
           },
-          maxTicksLimit: 14,
-          maxRotation: 0, // Disable label rotation
-          minRotation: 0, 
+          maxTicksLimit: 10,
+          maxRotation: 50, // Disable label rotation
         },
       },
       y: {
         ticks: {
           font: {
-            size: 15,
-          },
+            size: 25,
+          },  
         },
       },
     },
   };
 
-  const dataRange = data.row_2_rdp.length
-
   const settings = {
-    labels: Array.from({ length: dataRange }, (_, i) => i.toString()),
+    labels: data.row_1,
     datasets: [
       {
         label: `Parallel Line`,
@@ -492,7 +496,6 @@ function Chart({ data }) {
         borderWidth: 2,
         pointRadius: 0,
         pointHoverRadius: 5,
-
       },
       {
         label: `Original Line`,
@@ -502,7 +505,6 @@ function Chart({ data }) {
         borderWidth: 2,
         pointRadius: 0,
         pointHoverRadius: 5,
-
       },
     ],
   };

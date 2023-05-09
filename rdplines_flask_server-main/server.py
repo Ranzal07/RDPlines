@@ -15,7 +15,7 @@ app = Flask(__name__)
 # Set the maximum allowed request size to 100 GB
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024 * 1024
 
-executor = ThreadPoolExecutor(2) 
+executor = ThreadPoolExecutor(4) 
 
 # rdp code from scratch
 """
@@ -47,15 +47,15 @@ def find_optimal_chunk_size(data):
     """
     len_data = len(data)
     if len_data <= 100:
-        return 1
-    elif len_data <= 1000:
+        return 2
+    elif len_data > 100 and len_data <= 1000:
         return 4
-    elif len_data <= 5000:
-        return 8
-    elif len_data <= 30000:
+    elif len_data > 1000 and len_data <= 10000:
         return 16
-    else:
-        return 20
+    elif len_data > 10000 and len_data <= 100000:
+        return 32
+    elif len_data > 100000:
+        return 64
 
 # this function contains just a classic RDP algorithm
 def classic_rdp(points, eps):
@@ -80,8 +80,8 @@ def parallel_rdp_algorithm(data: List[List[float]], epsilon: float, chunk_size: 
     This is the function where the process of running all the chunks of the original line will happen in a parallel way through the use of multiprocessing's threadpoolexecutor
     """
 
-    # Create a thread pool with two threads
-    executor = ThreadPoolExecutor(2)
+    # Create a thread pool with four threads
+    executor = ThreadPoolExecutor(4)
 
     # Divide the data into chunks of size chunk_size (if specified)
     if chunk_size:
@@ -145,16 +145,16 @@ def createNewCSV(file, file_size, paralValue, df, return_val):
         "new_file_name": new_filename,
         "new_file_size": new_file_size,
         "new_file_type": new_file_type,
-        "diff_file_size": diff_file_size,
-        "diff_file_type": diff_file_type,
     })
 
 # this function is for getting file size label
 def convert_bytes(num):
-    for x in ['bytes', 'KB', 'MB', 'GB', 'TB']:
-        if num < 1024.0:
-            return "%s" % (x)
-        num /= 1024.0
+    if num >= 1024*1024:
+        size_mb = num/(1024*1024)
+        return f'{size_mb:.2f} MB'
+    else:
+        size_kb = num/1024
+        return f'{size_kb:.2f} KB'
 
 # this function is for getting dynamic epsilon value
 def dynamic_epsilon(data):
@@ -164,8 +164,9 @@ def dynamic_epsilon(data):
     """
     time_interval = 1  # determines the intensity of the change (1 = 100% maximum value for the best epsilon, 0.5 = 50%, 0.1 = 10%)
     mad = np.median(np.abs(data - np.median(data)))  # MAD
-    # multiplying the mad to the intensity of change to get the epsilon
-    epsilon = mad * time_interval
+    data_range = np.max(data) - np.min(data)  # range of the data
+    # multiplying the average of the MAD and range to the intensity of change to get the epsilon
+    epsilon = (mad + data_range) / 2 * time_interval
     return epsilon
 
 #simplify
@@ -198,7 +199,7 @@ def trigger():
         points = np.column_stack([range(len(first_row)), second_row])
 
         # get dynamic epsilon value
-        eps = dynamic_epsilon(points)
+        eps = dynamic_epsilon([p[1] for p in points])
 
         # edit here
         # change chunk size
@@ -266,15 +267,11 @@ def trigger():
             "row_2": list_row_2,
             "row_1_rdp": list_row_1_rdp,
             "row_2_rdp": list_row_2_rdp,
-            "row_1_rdp_classic": list_row_1_rdp_classic,
-            "row_2_rdp_classic": list_row_2_rdp_classic,
             "file_type": file_type,
             "file_size": file_size,
             "epsilon" : eps,
             "t_statistic": t,
             "p_value": p,
-            "classic_points": tempClassic.tolist(),
-            "classic_runtime": classic_runtime,
             "parallel_runtime": parallel_runtime,
         })
         
